@@ -1,8 +1,9 @@
 require("dotenv").config();
 const express = require("express");
 const app = express();
-const database = require("./src/database");
-database();
+// Connect to database
+const connectToDb = require("./src/database");
+connectToDb();
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
@@ -16,7 +17,7 @@ app.use(express.urlencoded({extended:true}));
 
 const session = require('express-session');
 app.use(session({
-  secret: 't2204m', // Add a secret key to sign the session ID cookie
+  secret: process.env.SESSION_SECRET, // Add a secret key to sign the session ID cookie
   resave: true,
   saveUninitialized: true,
   cookie: {
@@ -24,3 +25,17 @@ app.use(session({
     secure: false // lam local thi false, online thi true
   }
 }));
+
+// Custom middleware to attach req to res.locals
+app.use((req, res, next) => {
+    res.locals.req = req;
+    next();
+  });
+
+// General routes (like home page, about us page...):
+const generalRoutes = require('./src/routes/general.route');
+app.use('/', generalRoutes);
+
+// Student routes:
+const userRoutes = require('./src/routes/user.route');
+app.use('/user', userRoutes);
